@@ -55,6 +55,7 @@ export const InputWithUnit: React.FC<InputWithUnitProps> = ({
   type = 'text',
   inputMode,
   'aria-describedby': describedBy,
+  'aria-describedby': callerDescribedBy,
   ...inputProps
 }) => {
   const unitId = `${id}-unit`;
@@ -68,6 +69,13 @@ export const InputWithUnit: React.FC<InputWithUnitProps> = ({
   const resolvedType = type === 'number' ? 'text' : type;
   const resolvedInputMode = inputMode ?? (type === 'number' ? 'decimal' : undefined);
 
+  // Callers (e.g. the create-stream rate/duration fields) point aria-describedby
+  // at the active hint or error message. Keep those references — dropping them
+  // would disconnect the field from the text that describes its state — and
+  // append the unit badge and keyboard hint so they are announced too.
+  const describedBy =
+    [callerDescribedBy, unitId, hintId].filter(Boolean).join(' ') || undefined;
+
   return (
     <div className={`input-with-unit ${hasError ? 'input-with-unit--error' : ''}`}>
       <input
@@ -77,6 +85,7 @@ export const InputWithUnit: React.FC<InputWithUnitProps> = ({
         inputMode={resolvedInputMode}
         className={`input-with-unit__field ${className || ''}`.trim()}
         aria-describedby={descriptionIds}
+        aria-describedby={describedBy}
         aria-invalid={hasError || undefined}
       />
       <span id={unitId} className="input-with-unit__badge" aria-label={`Unit: ${unit}`}>
