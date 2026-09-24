@@ -55,9 +55,17 @@ describe('EmbedStreamWidget', () => {
     vi.restoreAllMocks();
   });
 
+  let nonceSeq = 0;
   const sendMessage = (data: unknown, origin = window.location.origin) => {
+    // embedMessagePolicy requires a fresh nonce + timestamp on every message;
+    // inject them here so the tests exercise origin/bounds policy, not nonce mechanics.
+    let payload = data;
+    if (data && typeof data === 'object' && (data as Record<string, unknown>).type === 'fluxora:embed' && !(data as Record<string, unknown>).nonce) {
+      nonceSeq += 1;
+      payload = { ...(data as Record<string, unknown>), nonce: `test-nonce-${nonceSeq}`, timestamp: Date.now() };
+    }
     window.dispatchEvent(new MessageEvent("message", {
-      data,
+      data: payload,
       origin,
       source: window,
     }));
@@ -192,8 +200,10 @@ describe('EmbedStreamWidget', () => {
       sendMessage({ type: 'fluxora:embed', version: 1, action: 'resize', height: 900 }, 'null');
       sendMessage({ type: 'fluxora:embed', version: 1, action: 'resize', height: 1000, padding: 'x'.repeat(5000) });
 
-      expect(container).not.toHaveStyle({ minHeight: '700px' });
-      expect(container).toHaveStyle({ minHeight: '500px' });
+      await waitFor(() => {
+        expect(container).not.toHaveStyle({ minHeight: '700px' });
+        expect(container).toHaveStyle({ minHeight: '500px' });
+      });
     });
 
     it('applies valid bounded resize and theme messages from the parent', async () => {
@@ -204,8 +214,10 @@ describe('EmbedStreamWidget', () => {
       sendMessage({ type: 'fluxora:embed', version: 1, action: 'resize', width: 640, height: 1 });
       sendMessage({ type: 'fluxora:embed', version: 1, action: 'theme', theme: 'dark' });
 
-      expect(container).toHaveStyle({ maxWidth: '640px', minHeight: '1px' });
-      expect(container).toHaveAttribute('data-theme', 'dark');
+      await waitFor(() => {
+        expect(container).toHaveStyle({ maxWidth: '640px', minHeight: '1px' });
+        expect(container).toHaveAttribute('data-theme', 'dark');
+      });
     });
 
     it('renders card preset by default', async () => {
