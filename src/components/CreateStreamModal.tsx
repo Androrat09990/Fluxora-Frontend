@@ -417,6 +417,11 @@ export default function CreateStreamModal({
       optimisticOpIdRef.current = null;
     },
   });
+  // A dropped wallet connection keeps the form mounted (#1678) but must not
+  // start a new signing/submission until the wallet is reachable again.
+  const walletConnectionLost =
+    wallet.connectionStatus === "dropped" ||
+    wallet.connectionStatus === "reconnecting";
   const isConfirmationPending = txSubmission.status === "pending";
   const isBusyCreating = txSubmission.isSubmitting;
   const submitButtonLabel =
@@ -934,6 +939,10 @@ export default function CreateStreamModal({
         setError(t("createStream.validation.walletNotConnected"));
         return;
       }
+      if (walletConnectionLost) {
+        setError(t("createStream.validation.walletConnectionLost"));
+        return;
+      }
       if (wallet.isNetworkMismatch) {
         setError(t("createStream.validation.networkMismatch", {
           expected: wallet.expectedNetwork,
@@ -973,6 +982,10 @@ export default function CreateStreamModal({
 
       if (!wallet.connected) {
         setError(t("createStream.validation.walletNotConnected"));
+        return;
+      }
+      if (walletConnectionLost) {
+        setError(t("createStream.validation.walletConnectionLost"));
         return;
       }
       if (wallet.isNetworkMismatch) {
