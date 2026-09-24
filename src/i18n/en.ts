@@ -325,6 +325,32 @@ export const en = {
   "streams.filter.paused": "Paused",
   "streams.filter.completed": "Completed",
 
+  // StreamTimeline — src/components/StreamTimeline.tsx
+  "streamTimeline.startDate": "Stream started {date}",
+  "streamTimeline.cliffEndDate": "Cliff ends {date}",
+  "streamTimeline.currentDate": "Current date {date}",
+  "streamTimeline.endDate": "Stream ends {date}",
+  "streamTimeline.streamStatus": "Status: {status}",
+  "streamTimeline.progress_one": "Stream progress: {percent}% elapsed",
+  "streamTimeline.progress_other": "Stream progress: {percent}% elapsed",
+  "streamTimeline.withdrawable_one": "{amount} withdrawable now",
+  "streamTimeline.withdrawable_other": "{amount} withdrawable now",
+  "streamTimeline.totalAmount_one": "{amount} total",
+  "streamTimeline.totalAmount_other": "{amount} total",
+
+  // Transaction demo — src/components/StreamTimeline.tsx
+  "transactionDemo.successes_one": "{count} transaction succeeded",
+  "transactionDemo.successes_other": "{count} transactions succeeded",
+  "transactionDemo.failures_one": "{count} transaction failed",
+  "transactionDemo.failures_other": "{count} transactions failed",
+  "transactionDemo.skipped_one": "{count} duplicate skipped",
+  "transactionDemo.skipped_other": "{count} duplicates skipped",
+
+  // RecentStreams — src/components/RecentStreams.tsx
+  "recentStreams.foundMatchingStreams_one": "Found {count} matching stream.",
+  "recentStreams.foundMatchingStreams_other": "Found {count} matching streams.",
+  "recentStreams.noMatchingStreams": "No matching streams found.",
+
   // Streams.tsx Empty Search State
   "streams.emptySearch.text": "No streams match your search or filter.",
 
@@ -409,6 +435,8 @@ export const en = {
   "csvUpload.preview.captionSr": "{valid} valid, {errors} need attention, {dups} duplicate recipients",
   "csvUpload.preview.liveUpdate": "Row {n} updated: {status}.",
   "csvUpload.preview.replaceConfirm": "Replacing the file will clear your current preview. Continue?",
+  "invalidRowsSkipped_one": "{count} invalid row skipped",
+  "invalidRowsSkipped_other": "{count} invalid rows skipped",
 
   // Submission
   "csvUpload.submit.progress": "Submitting stream {current} of {total}…",

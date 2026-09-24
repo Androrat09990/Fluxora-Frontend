@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useI18n } from '../i18n';
 
 export type StreamStatus = 'Active' | 'Paused' | 'Completed';
 
@@ -44,14 +44,14 @@ export default function RecentStreams({
   onRetry,
   walletConnected = false
 }: RecentStreamsProps) {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [announcement, setAnnouncement] = useState('');
 
   useEffect(() => {
     if (streams.length > 0) {
       setAnnouncement(t('recentStreams.foundMatchingStreams', { count: streams.length }));
     } else {
-      setAnnouncement(t('recentStreams.foundMatchingStreams', { count: 0 }));
+      setAnnouncement(t('recentStreams.noMatchingStreams'));
     }
     
     const timer = setTimeout(() => setAnnouncement(''), 1000);

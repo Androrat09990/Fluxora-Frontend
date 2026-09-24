@@ -1,5 +1,5 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "../i18n";
 import "./StreamTimeline.module.css";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 import { createDateTimeFormat, formatNumber } from "../lib/formatters";
@@ -40,7 +40,7 @@ type TransactionStatus = "idle" | "pending" | "confirmed" | "rejected" | "timeou
 const TransactionDemo: React.FC<{
   mockOutcome: Exclude<TransactionStatus, "idle" | "pending">;
 }> = ({ mockOutcome }) => {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [status, setStatus] = React.useState<TransactionStatus>("idle");
   const [message, setMessage] = React.useState(
     "Transaction state idle. Click submit to start.",
@@ -140,7 +140,7 @@ export const StreamTimeline: React.FC<StreamTimelineProps> = ({
   showTransactionDemo = false,
   transactionDemoOutcome = "confirmed",
 }) => {
-  const { t } = useTranslation();
+  const { t } = useI18n();
   const [animateClass, setAnimateClass] = React.useState("");
   const prevStatusRef = React.useRef(status);
 

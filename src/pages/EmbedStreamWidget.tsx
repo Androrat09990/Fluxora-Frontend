@@ -19,7 +19,6 @@ import { useEmbedAccessibility } from "../hooks/useEmbedAccessibility";
 import {
   getAllowedEmbedOrigins,
   validateEmbedMessage,
-  parseEmbedMessage
 } from "../lib/embedMessagePolicy";
 
 /**
@@ -88,8 +87,7 @@ export default function EmbedStreamWidget() {
     const handleMessage = (event: MessageEvent) => {
       const validation = validateEmbedMessage(event, allowedOrigins);
       if (!validation.valid) return;
-      const message = parseEmbedMessage(event.data);
-      if (!message) return;
+      const message = validation.message;
 
       if (message.action === "theme") {
         setMessageTheme({ theme: message.theme, accentColor: null });
