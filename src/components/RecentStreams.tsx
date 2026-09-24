@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export type StreamStatus = 'Active' | 'Paused' | 'Completed';
 
@@ -14,6 +15,11 @@ export interface Stream {
 
 import StreamsLoading from './StreamsLoading';
 import EmptyState from './EmptyState';
+import { isSafeUrl } from '../utils/security';
+import {
+  getSafeExternalUrl,
+  SAFE_EXTERNAL_LINK_ATTRIBUTES,
+} from '../lib/safeExternalUrl';
 
 interface RecentStreamsProps {
   streams: Stream[];
@@ -38,18 +44,19 @@ export default function RecentStreams({
   onRetry,
   walletConnected = false
 }: RecentStreamsProps) {
+  const { t } = useTranslation();
   const [announcement, setAnnouncement] = useState('');
 
   useEffect(() => {
     if (streams.length > 0) {
-      setAnnouncement(`Found ${streams.length} matching streams.`);
+      setAnnouncement(t('recentStreams.foundMatchingStreams', { count: streams.length }));
     } else {
-      setAnnouncement('No matching streams found.');
+      setAnnouncement(t('recentStreams.foundMatchingStreams', { count: 0 }));
     }
     
     const timer = setTimeout(() => setAnnouncement(''), 1000);
     return () => clearTimeout(timer);
-  }, [streams.length]);
+  }, [streams.length, t]);
 
   if (loading) {
     return (
@@ -125,7 +132,15 @@ export default function RecentStreams({
             </tr>
           </thead>
           <tbody>
-            {streams.map((stream, index) => (
+            {streams.map((stream, index) => {
+              const safeExternalDetailUrl = getSafeExternalUrl(stream.detailUrl);
+              const detailUrl =
+                safeExternalDetailUrl ??
+                (stream.detailUrl && isSafeUrl(stream.detailUrl)
+                  ? stream.detailUrl
+                  : `/app/streams/${stream.id}`);
+
+              return (
               <tr key={stream.id} style={index % 2 === 0 ? rowEven : rowOdd}>
                 <td style={td}>
                   <div style={streamName}>{stream.name}</div>
@@ -141,8 +156,11 @@ export default function RecentStreams({
                   <StatusPill status={stream.status} />
                 </td>
                 <td style={td}>
-                  <Link 
-                    to={stream.detailUrl || `/app/streams/${stream.id}`} 
+                  <Link
+                    to={detailUrl}
+                    {...(safeExternalDetailUrl
+                      ? SAFE_EXTERNAL_LINK_ATTRIBUTES
+                      : {})}
                     style={viewLink}
                     aria-label={`View details for ${stream.name}`}
                   >
@@ -166,7 +184,8 @@ export default function RecentStreams({
                   </Link>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -177,8 +196,8 @@ export default function RecentStreams({
 function StatusPill({ status }: { status: StreamStatus }) {
   const config = {
     Active: {
-      bg: '#d1f4e8',
-      color: '#00875a',
+      bg: 'var(--status-success-bg)',
+      color: 'var(--status-success)',
       icon: (
         <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden="true">
           <circle cx="4" cy="4" r="4" />
@@ -187,8 +206,8 @@ function StatusPill({ status }: { status: StreamStatus }) {
       label: 'Active'
     },
     Paused: {
-      bg: '#fff4cc',
-      color: '#cc8800',
+      bg: 'var(--status-warning-bg)',
+      color: 'var(--status-warning)',
       icon: (
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
           <rect x="2" y="1" width="2" height="8" />
@@ -198,8 +217,8 @@ function StatusPill({ status }: { status: StreamStatus }) {
       label: 'Paused'
     },
     Completed: {
-      bg: '#d4e7ff',
-      color: '#0065cc',
+      bg: 'var(--status-info-bg)',
+      color: 'var(--status-info)',
       icon: (
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <path d="M2 6l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
@@ -243,7 +262,7 @@ const title: React.CSSProperties = {
 };
 
 const viewAllLink: React.CSSProperties = {
-  color: '#00d4aa',
+  color: 'var(--color-accent-secondary)',
   fontSize: '0.9375rem',
   textDecoration: 'none',
   display: 'flex',
@@ -337,7 +356,7 @@ const pillIcon: React.CSSProperties = {
 };
 
 const viewLink: React.CSSProperties = {
-  color: '#00d4aa',
+  color: 'var(--color-accent-secondary)',
   textDecoration: 'none',
   display: 'inline-flex',
   alignItems: 'center',

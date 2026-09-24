@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
-import { lazy, Suspense, useState, useEffect, type ReactElement } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
+import { lazy, useState, useEffect, type ComponentType, type ReactElement } from "react";
 import Layout from "./components/Layout";
 import AppNavbar from "./components/navigation/AppNavbar";
-import { Skeleton, SkeletonCard } from "./components/Skeleton";
+import RouteErrorBoundary from "./components/RouteErrorBoundary";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { WalletProvider } from "./components/wallet-connect/Walletcontext";
 import { ToastProvider } from "./components/toast/ToastProvider";
@@ -13,13 +13,29 @@ import Home from "./pages/Home";
 import ConnectWallet from "./pages/ConnectWallet";
 import ErrorPage from "./pages/ErrorPage";
 import NotFound from "./pages/NotFound";
+import { VoiceProvider } from "./components/voice/VoiceContext";
+import { VoiceCommandPanel } from "./components/voice/VoiceCommandPanel";
+import { VoiceConfirmModal } from "./components/voice/VoiceConfirmModal";
+import { getRecipientRouteKey } from "./pages/recipientRouteKey";
+import RequireWalletAction from "./components/RequireWalletAction";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Streams = lazy(() => import("./pages/Streams"));
 const StreamDetail = lazy(() => import("./pages/StreamDetail"));
 const Recipient = lazy(() => import("./pages/Recipient"));
 const TreasuryPage = lazy(() => import("./pages/TreasuryPage"));
-const EmptyStateDemo = lazy(() => import("./pages/EmptyStateDemo"));
+const EmbedStreamWidget = lazy(() => import("./pages/EmbedStreamWidget"));
+import { IS_DEV } from "./utils/env";
+import { configError } from "./lib/config";
+
+const EmptyStateDemo = IS_DEV
+  ? lazy(() => import("./pages/EmptyStateDemo"))
+  : () => null;
+
+const ComponentGallery = IS_DEV
+  ? lazy(() => import("./pages/dev/ComponentGallery"))
+  : () => null;
+
 
 function LegacyStreamRedirect() {
   const { streamId } = useParams();
@@ -31,60 +47,31 @@ function LegacyStreamRedirect() {
   );
 }
 
-function AppRouteFallback() {
-  return (
-    <div role="status" aria-label="Loading app page" aria-busy="true">
-      <span className="sr-only">Loading app page...</span>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          marginBottom: "1.5rem",
-        }}
-      >
-        <Skeleton width={220} height={28} borderRadius={8} />
-        <Skeleton width={340} height={14} />
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "1rem",
-        }}
-        aria-hidden="true"
-      >
-        {[0, 1, 2].map((item) => (
-          <SkeletonCard
-            key={item}
-            style={{ display: "flex", alignItems: "center", gap: 12 }}
-          >
-            <Skeleton width={40} height={40} borderRadius={8} />
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <Skeleton height={10} width="45%" />
-              <Skeleton height={18} width="70%" />
-            </div>
-          </SkeletonCard>
-        ))}
-      </div>
-    </div>
-  );
+function RecipientRoute() {
+  const location = useLocation();
+  return <Recipient key={getRecipientRouteKey(location.pathname, location.search)} />;
 }
 
-function lazyAppRoute(element: ReactElement) {
-  return <Suspense fallback={<AppRouteFallback />}>{element}</Suspense>;
+function lazyAppRoute(
+  element: ReactElement,
+  load?: () => Promise<{ default: ComponentType }>,
+) {
+  return <RouteErrorBoundary load={load}>{element}</RouteErrorBoundary>;
 }
 
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  if (configError) {
+    return (
+      <ErrorPage
+        type="validation"
+        headline="Configuration needs attention"
+        errorMessage={`Fluxora cannot start safely. ${configError.message} Update your VITE_* variables and restart the development server or rebuild the application.`}
+        primaryCtaText="Reload"
+      />
+    );
+  }
 
   const handleSidebarToggle = () => {
     setIsSidebarOpen((prev) => !prev);
@@ -112,48 +99,63 @@ export default function App() {
     <ThemeProvider>
       <I18nProvider>
         <BrowserRouter>
-          <WalletProvider>
-            <ToastProvider>
-              <a href="#main-content" className="skip-link">
-                Skip to content
-              </a>
-              <AppNavbar
-                onSidebarToggle={handleSidebarToggle}
-                isSidebarOpen={isSidebarOpen}
-              />
+          <VoiceProvider>
+            <WalletProvider>
+              <ToastProvider>
+                <a href="#main-content" className="skip-link">
+                  Skip to content
+                </a>
+                <AppNavbar
+                  onSidebarToggle={handleSidebarToggle}
+                  isSidebarOpen={isSidebarOpen}
+                />
 
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/dashboard" element={<Navigate to="/app" replace />} />
-                  <Route path="/streams" element={<Navigate to="/app/streams" replace />} />
-                  <Route path="/streams/:streamId" element={<LegacyStreamRedirect />} />
-                  <Route path="/landing" element={<Navigate to="/" replace />} />
-                  <Route
-                    path="/app"
-                    element={
-                      <RequireWallet>
-                        <Layout />
-                      </RequireWallet>
-                    }
-                  >
-                    <Route index element={lazyAppRoute(<Dashboard />)} />
-                    <Route path="streams" element={lazyAppRoute(<Streams />)} />
-                    <Route path="streams/:streamId" element={lazyAppRoute(<StreamDetail />)} />
-                    <Route path="recipient" element={lazyAppRoute(<Recipient />)} />
-                    <Route path="treasurypage" element={lazyAppRoute(<TreasuryPage />)} />
-                    <Route path="error" element={<ErrorPage />} />
+                <ErrorBoundary>
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+                    <Route path="/streams" element={<Navigate to="/app/streams" replace />} />
+                    <Route path="/streams/:streamId" element={<LegacyStreamRedirect />} />
+                    <Route path="/landing" element={<Navigate to="/" replace />} />
                     <Route
-                      path="empty-state-demo"
-                      element={lazyAppRoute(<EmptyStateDemo />)}
-                    />
-                  </Route>
-                  <Route path="/connect-wallet" element={<ConnectWallet />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </ErrorBoundary>
-            </ToastProvider>
-          </WalletProvider>
+                      path="/app"
+                      element={
+                        <RequireWallet>
+                          <Layout />
+                        </RequireWallet>
+                      }
+                    >
+                      <Route index element={lazyAppRoute(<Dashboard />, () => import("./pages/Dashboard"))} />
+                      <Route path="streams/:streamId" element={<RequireWalletAction>{lazyAppRoute(<Streams />, () => import("./pages/Streams"))}</RequireWalletAction>} />
+                      <Route path="streams" element={<RequireWalletAction>{lazyAppRoute(<StreamDetail />, () => import("./pages/StreamDetail"))}</RequireWalletAction>} />
+                      <Route path="recipient" element={<RequireWalletAction>{lazyAppRoute(<RecipientRoute />)}</RequireWalletAction>} />
+                      <Route path="treasurypage" element={lazyAppRoute(<TreasuryPage />, () => import("./pages/TreasuryPage"))} />
+                      <Route path="error" element={<ErrorPage />} />
+                      {IS_DEV && (
+                        <Route
+                          path="empty-state-demo"
+                          element={lazyAppRoute(<EmptyStateDemo />, () => import("./pages/EmptyStateDemo"))}
+                        />
+                      )}
+                      {IS_DEV && (
+                        <Route
+                          path="component-gallery"
+                          element={lazyAppRoute(<ComponentGallery />, () => import("./pages/dev/ComponentGallery"))}
+                        />
+                      )}
+                    </Route>
+                    <Route path="/connect-wallet" element={<ConnectWallet />} />
+                    <Route path="/embed/streams/:streamId" element={<EmbedStreamWidget />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </ErrorBoundary>
+
+                {/* Voice Control Reference Panel & Destructive Action Modal */}
+                <VoiceCommandPanel />
+                <VoiceConfirmModal />
+              </ToastProvider>
+            </WalletProvider>
+          </VoiceProvider>
         </BrowserRouter>
       </I18nProvider>
     </ThemeProvider>

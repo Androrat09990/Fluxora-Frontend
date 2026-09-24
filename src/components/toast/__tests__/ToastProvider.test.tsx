@@ -1,11 +1,6 @@
 vi.unmock("../ToastProvider");
 import { useState } from "react";
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-} from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastProvider, useToast } from "../ToastProvider";
 
@@ -32,10 +27,48 @@ function renderWithProvider(ui: React.ReactNode) {
 }
 
 describe("ToastProvider / useToast", () => {
-  beforeEach(() => vi.useFakeTimers());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    window.localStorage.clear();
+  });
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+  });
+
+  it("renders a sound-alert toggle in the muted-by-default state", () => {
+    renderWithProvider(<AddButton />);
+
+    expect(
+      screen.getByRole("button", { name: /enable sound alerts/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/sound alerts are off by default/i),
+    ).toBeInTheDocument();
+  });
+
+  it("persists sound-alert preference changes through the validated storage key", () => {
+    renderWithProvider(<AddButton />);
+
+    const toggle = screen.getByRole("button", {
+      name: /enable sound alerts/i,
+    });
+    fireEvent.click(toggle);
+
+    expect(
+      screen.getByRole("button", { name: /mute sound alerts/i }),
+    ).toBeInTheDocument();
+    expect(window.localStorage.getItem("toast-sound")).toBe("enabled");
+  });
+
+  it("ignores tampered toast-sound storage values and falls back to the muted default", () => {
+    window.localStorage.setItem("toast-sound", "not-valid");
+
+    renderWithProvider(<AddButton />);
+
+    expect(
+      screen.getByRole("button", { name: /enable sound alerts/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders a toast when addToast is called", () => {
@@ -301,10 +334,18 @@ describe("ToastProvider / useToast", () => {
       const { addToast } = useToast();
       return (
         <>
-          <button onClick={() => addToast("T1", "success", 2000)}>Add T1</button>
-          <button onClick={() => addToast("T2", "success", 2000)}>Add T2</button>
-          <button onClick={() => addToast("T3", "success", 2000)}>Add T3</button>
-          <button onClick={() => addToast("T4", "success", 2000)}>Add T4</button>
+          <button onClick={() => addToast("T1", "success", 2000)}>
+            Add T1
+          </button>
+          <button onClick={() => addToast("T2", "success", 2000)}>
+            Add T2
+          </button>
+          <button onClick={() => addToast("T3", "success", 2000)}>
+            Add T3
+          </button>
+          <button onClick={() => addToast("T4", "success", 2000)}>
+            Add T4
+          </button>
         </>
       );
     }
@@ -373,7 +414,9 @@ describe("ToastProvider / useToast", () => {
     fireEvent.click(screen.getByRole("button", { name: "Dismiss Hidden" }));
 
     // Dismiss non-existent id
-    fireEvent.click(screen.getByRole("button", { name: "Dismiss Non-existent" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Dismiss Non-existent" }),
+    );
   });
 
   it("clears timers when ToastProvider unmounts", () => {
@@ -383,5 +426,92 @@ describe("ToastProvider / useToast", () => {
 
     unmount();
     act(() => vi.advanceTimersByTime(5000));
+  });
+  it("deduplicates identical toasts added within the deduplication window", () => {
+    function DedupeAdder() {
+      const { addToast } = useToast();
+      return (
+        <button
+          onClick={() => {
+            addToast("Duplicate Message", "error");
+            addToast("Duplicate Message", "error");
+          }}
+        >
+          Add Duplicates
+        </button>
+      );
+    }
+    renderWithProvider(<DedupeAdder />);
+    fireEvent.click(screen.getByRole("button", { name: "Add Duplicates" }));
+    
+    const elements = screen.getAllByText("Duplicate Message");
+    expect(elements).toHaveLength(1);
+  });
+
+  it("allows identical toasts if added outside the deduplication window", () => {
+    function DedupeDelayAdder() {
+      const { addToast } = useToast();
+      return (
+        <button
+          onClick={() => {
+            addToast("Duplicate Message Delay", "error");
+          }}
+        >
+          Add Duplicate
+        </button>
+      );
+    }
+    renderWithProvider(<DedupeDelayAdder />);
+    
+    fireEvent.click(screen.getByRole("button", { name: "Add Duplicate" }));
+    act(() => vi.advanceTimersByTime(1100)); // Advance past DEDUPE_WINDOW (1000ms)
+    fireEvent.click(screen.getByRole("button", { name: "Add Duplicate" }));
+    
+    const elements = screen.getAllByText("Duplicate Message Delay");
+    expect(elements).toHaveLength(2);
+  });
+
+  it("replaces an existing toast if an explicit id is provided", () => {
+    function ReplacementAdder() {
+      const { addToast } = useToast();
+      return (
+        <>
+          <button onClick={() => addToast("Pending Transaction", "info", 5000, undefined, "tx-123")}>
+            Add Pending
+          </button>
+          <button onClick={() => addToast("Transaction Success", "success", 5000, undefined, "tx-123")}>
+            Add Success
+          </button>
+        </>
+      );
+    }
+    renderWithProvider(<ReplacementAdder />);
+    fireEvent.click(screen.getByRole("button", { name: "Add Pending" }));
+    expect(screen.getByText("Pending Transaction")).toBeInTheDocument();
+    
+    fireEvent.click(screen.getByRole("button", { name: "Add Success" }));
+    expect(screen.queryByText("Pending Transaction")).not.toBeInTheDocument();
+    expect(screen.getByText("Transaction Success")).toBeInTheDocument();
+  });
+
+  it("does not deduplicate distinct messages with the same variant", () => {
+    function DistinctAdder() {
+      const { addToast } = useToast();
+      return (
+        <button
+          onClick={() => {
+            addToast("Error 1", "error");
+            addToast("Error 2", "error");
+          }}
+        >
+          Add Distinct
+        </button>
+      );
+    }
+    renderWithProvider(<DistinctAdder />);
+    fireEvent.click(screen.getByRole("button", { name: "Add Distinct" }));
+    
+    expect(screen.getByText("Error 1")).toBeInTheDocument();
+    expect(screen.getByText("Error 2")).toBeInTheDocument();
   });
 });
