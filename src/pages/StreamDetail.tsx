@@ -17,6 +17,81 @@ import { StreamOGPreviewModal } from "../components/StreamOGPreviewModal";
 import { Share2 } from "lucide-react";
 
 /**
+ * Stream status presentation
+ * ──────────────────────────
+ * Every status the detail view can encounter resolves to an explicit, visible
+ * presentation (label + description + colour). Statuses the view does not
+ * recognise fall back to a clearly labelled "unknown" presentation instead of
+ * rendering a blank region, so the user can always tell whether a stream is
+ * unusual or the page is broken.
+ */
+export interface StreamStatusPresentation {
+  /** Human-readable label rendered in the status pill. */
+  label: string;
+  /** One-line explanation of what the status means for the viewer. */
+  description: string;
+  /** Colour used for the status dot and label. */
+  color: string;
+  /** False when the raw status is not one the view explicitly knows about. */
+  recognized: boolean;
+}
+
+const KNOWN_STREAM_STATUS_PRESENTATIONS: Record<
+  string,
+  Omit<StreamStatusPresentation, "recognized">
+> = {
+  active: {
+    label: "Active",
+    description: "The stream is live and accrues funds on schedule.",
+    color: "var(--color-success, #16a34a)",
+  },
+  paused: {
+    label: "Paused",
+    description:
+      "Accrual is paused. The balance already streamed stays available to the recipient.",
+    color: "var(--color-warning, #d97706)",
+  },
+  completed: {
+    label: "Completed",
+    description: "The stream finished and its full schedule was delivered.",
+    color: "var(--color-text-secondary, #6b7280)",
+  },
+  cancelled: {
+    label: "Cancelled",
+    description:
+      "The stream was cancelled before its scheduled end date and no longer accrues.",
+    color: "var(--color-error, #b91c1c)",
+  },
+  matured: {
+    label: "Matured",
+    description: "The stream reached maturity and no longer accrues funds.",
+    color: "var(--color-text-secondary, #6b7280)",
+  },
+};
+
+/**
+ * Resolve the presentation for any status string. Always returns a defined
+ * presentation; unknown values get an explicit fallback (never blank).
+ */
+export function getStreamStatusPresentation(
+  status: string | null | undefined,
+): StreamStatusPresentation {
+  const key = typeof status === "string" ? status.trim().toLowerCase() : "";
+  const known = key ? KNOWN_STREAM_STATUS_PRESENTATIONS[key] : undefined;
+  if (known) {
+    return { ...known, recognized: true };
+  }
+  const label = key ? key.charAt(0).toUpperCase() + key.slice(1) : "Unknown";
+  return {
+    label,
+    description:
+      "This status is not recognised by the stream detail view. Confirm the stream state in the treasury console before acting on it.",
+    color: "var(--color-text-secondary, #6b7280)",
+    recognized: false,
+  };
+}
+
+/**
  * StreamDetail page
  * ─────────────────────────────────────────────────────────────────────────────
  * Dedicated route for `/app/streams/:streamId`. Fetches a single
@@ -341,6 +416,8 @@ export default function StreamDetail() {
     Settled: "var(--color-text-secondary, #6b7280)",
   };
 
+  const statusPresentation = getStreamStatusPresentation(stream.status);
+
   // ── Single-stream detail ──────────────────────────────────────────────────
   return (
     <div data-testid="stream-detail-page" style={{ padding: "1.5rem" }}>
@@ -476,6 +553,58 @@ export default function StreamDetail() {
           </div>
         )}
       </div>
+      {/* Status presentation — always renders a defined state, even for
+          statuses this view does not recognise, so the region is never blank. */}
+      <section
+        aria-labelledby="stream-status-heading"
+        data-testid="stream-status"
+        data-status={String(stream.status).toLowerCase()}
+        data-status-recognized={statusPresentation.recognized ? "true" : "false"}
+        style={{ marginBottom: "1.5rem" }}
+      >
+        <h2 id="stream-status-heading" className="sr-only">
+          Stream status
+        </h2>
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.375rem",
+            padding: "0.25rem 0.75rem",
+            borderRadius: "9999px",
+            fontSize: "0.8125rem",
+            fontWeight: 600,
+            background: "var(--color-surface-2, #f3f4f6)",
+            color: statusPresentation.color,
+          }}
+        >
+          <span aria-hidden="true">●</span>
+          {statusPresentation.label}
+        </span>
+        <p
+          data-testid="stream-status-description"
+          style={{
+            margin: "0.5rem 0 0",
+            fontSize: "0.875rem",
+            color: "var(--color-text-secondary, #6b7280)",
+          }}
+        >
+          {statusPresentation.description}
+        </p>
+        {!statusPresentation.recognized && (
+          <p
+            data-testid="stream-status-fallback"
+            style={{
+              margin: "0.25rem 0 0",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              color: "var(--color-warning, #d97706)",
+            }}
+          >
+            Unrecognised stream status: <code>{String(stream.status)}</code>
+          </p>
+        )}
+      </section>
 
       {/* Metrics grid */}
       <dl
