@@ -7,6 +7,8 @@ import {
   MAX_CSV_FILE_SIZE_LABEL,
   MAX_CSV_ROWS,
 } from './csvParser';
+import { buildTemplateCsv } from './csvParser';
+import { validateCsvFile } from './csvFileValidation';
 import { CsvParseCancelledError, parseCsvAsync } from './csvParseClient';
 import type { CsvParseTask, CsvProgressPayload } from './csvParseClient';
 import type { ParseResult } from './types';
@@ -71,21 +73,11 @@ export const CsvDropZone: React.FC<CsvDropZoneProps> = ({ onParsed }) => {
 
   const processFile = useCallback(
     async (file: File) => {
-      // Validate extension / mime
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      const isCsv =
-        ext === 'csv' ||
-        ACCEPTED_MIME.has(file.type);
-      if (!isCsv) {
-        reject('Only .csv files are accepted.');
-        return;
-      }
-
-      // Reject oversized files before buffering the entire contents into memory.
-      if (file.size > MAX_CSV_FILE_SIZE_BYTES) {
-        reject(
-          `File is too large. Maximum size is ${MAX_CSV_FILE_SIZE_LABEL}.`,
-        );
+      // Validate type and size from cheap metadata BEFORE reading contents, so
+      // an arbitrary large or wrong-type file never gets buffered into memory.
+      const validation = validateCsvFile(file);
+      if (!validation.ok) {
+        reject(validation.message);
         return;
       }
 
