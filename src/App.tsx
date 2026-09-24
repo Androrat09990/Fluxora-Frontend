@@ -94,7 +94,14 @@ export default function App() {
 
                 <ErrorBoundary>
                   <Routes>
-                    <Route path="/" element={<Home />} />
+                    <Route
+                      path="/"
+                      element={
+                        <ErrorBoundary>
+                          <Home />
+                        </ErrorBoundary>
+                      }
+                    />
                     <Route path="/dashboard" element={<Navigate to="/app" replace />} />
                     <Route path="/streams" element={<Navigate to="/app/streams" replace />} />
                     <Route path="/streams/:streamId" element={<LegacyStreamRedirect />} />
@@ -126,9 +133,30 @@ export default function App() {
                         />
                       )}
                     </Route>
-                    <Route path="/connect-wallet" element={<ConnectWallet />} />
-                    <Route path="/embed/streams/:streamId" element={<EmbedStreamWidget />} />
-                    <Route path="*" element={<NotFound />} />
+                    <Route
+                      path="/connect-wallet"
+                      element={
+                        <ErrorBoundary>
+                          <ConnectWallet />
+                        </ErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="/embed/streams/:streamId"
+                      element={
+                        <ErrorBoundary>
+                          <EmbedStreamWidget />
+                        </ErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="*"
+                      element={
+                        <ErrorBoundary>
+                          <NotFound />
+                        </ErrorBoundary>
+                      }
+                    />
                   </Routes>
                 </ErrorBoundary>
 

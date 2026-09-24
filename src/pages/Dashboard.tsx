@@ -14,6 +14,7 @@ import { useWallet } from "../components/wallet-connect/Walletcontext";
 import { useTreasury } from "../components/treasuryOverviewPage/useTreasury";
 import { readOnboardingDismissed } from "../lib/onboarding";
 import { formatAssetAmount } from "../lib/formatters";
+import ErrorBoundary from "../components/ErrorBoundary";
 import { formatUsdc, toRecentStream } from "../lib/recentStreamMapper";
 import Button from "../components/Button";
 import "../design-tokens.css";
@@ -166,39 +167,41 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div style={cardGrid}>
-        <div style={card}>
-          <div
-            className="text-label-md"
-            style={{ color: "var(--muted)", marginBottom: "0.25rem" }}
-          >
-            Active Streams
+      <ErrorBoundary>
+        <div style={cardGrid}>
+          <div style={card}>
+            <div
+              className="text-label-md"
+              style={{ color: "var(--muted)", marginBottom: "0.25rem" }}
+            >
+              Active Streams
+            </div>
+            <div className="text-heading-2">{streams.length || "--"}</div>
           </div>
-          <div className="text-heading-2">{streams.length || "--"}</div>
+          <div style={card}>
+            <div
+              className="text-label-md"
+              style={{ color: "var(--muted)", marginBottom: "0.25rem" }}
+            >
+              Total Streaming
+            </div>
+            <div className="text-heading-2">
+              {totalStreaming > 0 ? formatUsdc(totalStreaming) : "-- USDC"}
+            </div>
+          </div>
+          <div style={card}>
+            <div
+              className="text-label-md"
+              style={{ color: "var(--muted)", marginBottom: "0.25rem" }}
+            >
+              Withdrawable
+            </div>
+            <div className="text-heading-2">
+              {withdrawable !== null ? formatUsdc(withdrawable) : "-- USDC"}
+            </div>
+          </div>
         </div>
-        <div style={card}>
-          <div
-            className="text-label-md"
-            style={{ color: "var(--muted)", marginBottom: "0.25rem" }}
-          >
-            Total Streaming
-          </div>
-          <div className="text-heading-2">
-            {totalStreaming > 0 ? formatUsdc(totalStreaming) : "-- USDC"}
-          </div>
-        </div>
-        <div style={card}>
-          <div
-            className="text-label-md"
-            style={{ color: "var(--muted)", marginBottom: "0.25rem" }}
-          >
-            Withdrawable
-          </div>
-          <div className="text-heading-2">
-            {withdrawable !== null ? formatUsdc(withdrawable) : "-- USDC"}
-          </div>
-        </div>
-      </div>
+      </ErrorBoundary>
 
       {hasError && (
         <div role="alert" style={walletBannerStyle}>
@@ -215,13 +218,15 @@ export default function Dashboard() {
 
       {loading || hasError || hasStreams ? (
         <>
-          <RecentStreams
-            streams={streams}
-            loading={loading}
-            error={error}
-            onRetry={refetch}
-            walletConnected={walletConnected}
-          />
+          <ErrorBoundary>
+            <RecentStreams
+              streams={streams}
+              loading={loading}
+              error={error}
+              onRetry={refetch}
+              walletConnected={walletConnected}
+            />
+          </ErrorBoundary>
           {!loading && !error && (
             <Button
               type="button"
@@ -234,15 +239,19 @@ export default function Dashboard() {
           )}
         </>
       ) : showOnboarding ? (
-        <TreasuryOnboarding
-          walletConnected={walletConnected}
-          walletAddress={walletAddress}
-          onConnectWallet={() => setIsWalletModalOpen(true)}
-          onCreateStream={handleOnboardingCreateStream}
-          onDismiss={handleDismissOnboarding}
-        />
+        <ErrorBoundary>
+          <TreasuryOnboarding
+            walletConnected={walletConnected}
+            walletAddress={walletAddress}
+            onConnectWallet={() => setIsWalletModalOpen(true)}
+            onCreateStream={handleOnboardingCreateStream}
+            onDismiss={handleDismissOnboarding}
+          />
+        </ErrorBoundary>
       ) : (
-        <TreasuryEmptyState onCreateStream={() => setIsModalOpen(true)} />
+        <ErrorBoundary>
+          <TreasuryEmptyState onCreateStream={() => setIsModalOpen(true)} />
+        </ErrorBoundary>
       )}
 
       <CreateStreamModal
