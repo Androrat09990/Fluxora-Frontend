@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
+import amountRules from "./eslint-rules/no-float-amount-arithmetic.js";
 
 export default tseslint.config(
   {
@@ -15,6 +16,7 @@ export default tseslint.config(
       "src/**/*.test.ts",
       "src/**/*.test.tsx",
       "scripts/**/*.test.mjs",
+      "eslint-rules/**",
     ],
   },
   js.configs.recommended,
@@ -67,6 +69,17 @@ export default tseslint.config(
           ],
         },
       ],
+    },
+  },
+  // Amount modules carry monetary values as exact integer minor units (bigint).
+  // This rule fails any change that would route an amount through IEEE-754.
+  {
+    files: ["src/lib/createStreamAmounts.ts"],
+    plugins: {
+      amounts: amountRules,
+    },
+    rules: {
+      "amounts/no-float-amount-arithmetic": "error",
     },
   },
   // Node-built scripts (e.g. bundle-size report, supply-chain audits) need Node globals.
