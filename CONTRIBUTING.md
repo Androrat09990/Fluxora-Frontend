@@ -261,15 +261,15 @@ Several design and accessibility specs live at the repo root and in `docs/`. Ref
 
 | File | Topic |
 |---|---|
-| [DESIGN_SPEC.md](DESIGN_SPEC.md) | Visual design system |
-| [DESIGN_TOKENS_QUICK_REFERENCE.md](DESIGN_TOKENS_QUICK_REFERENCE.md) | Token reference |
-| [DARK_THEME_SPEC.md](DARK_THEME_SPEC.md) | Dark mode behaviour |
-| [FOCUS_RING_SPEC.md](FOCUS_RING_SPEC.md) | Focus ring standards |
-| [WALLET_FLOWS_DESIGN_SPEC.md](WALLET_FLOWS_DESIGN_SPEC.md) | Wallet UX flows |
-| [STREAM_CARD_INTERACTION_SPEC.md](STREAM_CARD_INTERACTION_SPEC.md) | Stream card interactions |
-| [EMPTY_STATES_DESIGN_SPEC.md](EMPTY_STATES_DESIGN_SPEC.md) | Empty state patterns |
-| [LOADING_SKELETON_DESIGN_SPEC.md](LOADING_SKELETON_DESIGN_SPEC.md) | Loading skeleton patterns |
-| [MODAL_FOCUS_MANAGEMENT_DESIGN_SPEC.md](MODAL_FOCUS_MANAGEMENT_DESIGN_SPEC.md) | Modal focus management |
+| [DESIGN_SPEC.md](docs/DESIGN_SPEC.md) | Visual design system |
+| [DESIGN_TOKENS_QUICK_REFERENCE.md](docs/DESIGN_TOKENS_QUICK_REFERENCE.md) | Token reference |
+| [DARK_THEME_SPEC.md](docs/DARK_THEME_SPEC.md) | Dark mode behaviour |
+| [FOCUS_RING_SPEC.md](docs/FOCUS_RING_SPEC.md) | Focus ring standards |
+| [WALLET_FLOWS_DESIGN_SPEC.md](docs/WALLET_FLOWS_DESIGN_SPEC.md) | Wallet UX flows |
+| [STREAM_CARD_INTERACTION_SPEC.md](docs/STREAM_CARD_INTERACTION_SPEC.md) | Stream card interactions |
+| [EMPTY_STATES_DESIGN_SPEC.md](docs/EMPTY_STATES_DESIGN_SPEC.md) | Empty state patterns |
+| [LOADING_SKELETON_DESIGN_SPEC.md](docs/LOADING_SKELETON_DESIGN_SPEC.md) | Loading skeleton patterns |
+| [MODAL_FOCUS_MANAGEMENT_DESIGN_SPEC.md](docs/MODAL_FOCUS_MANAGEMENT_DESIGN_SPEC.md) | Modal focus management |
 | [docs/environment.md](docs/environment.md) | All `VITE_*` variables |
 | [docs/security.md](docs/security.md) | Contract security model |
 | [docs/supply-chain-policy.md](docs/supply-chain-policy.md) | Dependency vulnerability & license gates |
