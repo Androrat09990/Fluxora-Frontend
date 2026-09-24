@@ -52,10 +52,12 @@ export const InputWithUnit: React.FC<InputWithUnitProps> = ({
   hasError,
   keyboardHint,
   className,
+  'aria-describedby': describedBy,
   ...inputProps
 }) => {
   const unitId = `${id}-unit`;
   const hintId = keyboardHint ? `${id}-keyboard-hint` : undefined;
+  const descriptionIds = [describedBy, unitId, hintId].filter(Boolean).join(' ');
 
   return (
     <div className={`input-with-unit ${hasError ? 'input-with-unit--error' : ''}`}>
@@ -63,7 +65,7 @@ export const InputWithUnit: React.FC<InputWithUnitProps> = ({
         {...inputProps}
         id={id}
         className={`input-with-unit__field ${className || ''}`.trim()}
-        aria-describedby={keyboardHint ? `${unitId} ${hintId}` : unitId}
+        aria-describedby={descriptionIds}
         aria-invalid={hasError || undefined}
       />
       <span id={unitId} className="input-with-unit__badge" aria-label={`Unit: ${unit}`}>

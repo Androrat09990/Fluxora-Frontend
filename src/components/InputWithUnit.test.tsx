@@ -2,8 +2,90 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
 import { InputWithUnit } from "./InputWithUnit";
+import { ValidationMessage } from "./ValidationMessage";
 
 describe("InputWithUnit", () => {
+  describe("validation message associations", () => {
+    it.each([undefined, "Enter ↵"])(
+      "exposes every active error and removes cleared messages (keyboard hint: %s)",
+      (keyboardHint) => {
+        function RateField({ errors }: { errors: string[] }) {
+          return (
+            <>
+              <label htmlFor="rate">Daily rate</label>
+              <InputWithUnit
+                id="rate"
+                unit="USDC / day"
+                keyboardHint={keyboardHint}
+                hasError={errors.length > 0}
+                aria-describedby={
+                  errors.map((_, index) => `rate-error-${index}`).join(" ") ||
+                  undefined
+                }
+              />
+              {errors.map((error, index) => (
+                <ValidationMessage
+                  key={index}
+                  id={`rate-error-${index}`}
+                  message={error}
+                />
+              ))}
+            </>
+          );
+        }
+
+        const { rerender } = render(<RateField errors={[]} />);
+        const input = screen.getByRole("textbox", { name: "Daily rate" });
+        const initialDescription = input.getAttribute("aria-describedby");
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+        rerender(
+          <RateField
+            errors={[
+              "Enter a positive daily rate.",
+              "The rate exceeds the available deposit.",
+            ]}
+          />,
+        );
+        for (const alert of screen.getAllByRole("alert")) {
+          expect(
+            input.getAttribute("aria-describedby")?.split(/\s+/),
+          ).toContain(alert.id);
+          expect(alert).toHaveAttribute("aria-live", "assertive");
+        }
+        expect(input).toHaveAccessibleDescription(
+          /Enter a positive daily rate\./,
+        );
+        expect(input).toHaveAccessibleDescription(
+          /The rate exceeds the available deposit\./,
+        );
+        expect(input).toHaveAccessibleDescription(/USDC \/ day/);
+        if (keyboardHint) {
+          expect(input).toHaveAccessibleDescription(/Enter ↵/);
+        }
+
+        rerender(
+          <RateField errors={["The rate exceeds the available deposit."]} />,
+        );
+        expect(screen.getAllByRole("alert")).toHaveLength(1);
+        expect(input).toHaveAccessibleDescription(
+          /The rate exceeds the available deposit\./,
+        );
+        expect(input).not.toHaveAccessibleDescription(
+          /Enter a positive daily rate\./,
+        );
+
+        rerender(<RateField errors={[]} />);
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+        expect(document.getElementById("rate-error-0")).toBeNull();
+        expect(document.getElementById("rate-error-1")).toBeNull();
+        expect(input).toHaveAttribute("aria-describedby", initialDescription);
+        expect(input).not.toHaveAttribute("aria-invalid");
+        expect(input).not.toHaveAccessibleDescription(/deposit|positive/);
+      },
+    );
+  });
+
   describe("unit label rendering", () => {
     it("renders the unit label text", () => {
       render(<InputWithUnit id="test" unit="USDC / day" />);
