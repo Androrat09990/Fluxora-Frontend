@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
-import { lazy, useState, type ComponentType, type ReactElement } from "react";
+import { lazy, useState, useEffect, type ComponentType, type ReactElement } from "react";
 import Layout from "./components/Layout";
 import AppNavbar from "./components/navigation/AppNavbar";
 import RouteErrorBoundary from "./components/RouteErrorBoundary";
@@ -76,6 +76,24 @@ export default function App() {
   const handleSidebarToggle = () => {
     setIsSidebarOpen((prev) => !prev);
   };
+
+  useEffect(() => {
+    const handlePreloadError = (e: Event) => {
+      e.preventDefault();
+      if (
+        window.confirm(
+          "A new version of the application is available. Reload to update?"
+        )
+      ) {
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener("vite:preloadError", handlePreloadError);
+    return () => {
+      window.removeEventListener("vite:preloadError", handlePreloadError);
+    };
+  }, []);
 
   return (
     <ThemeProvider>
