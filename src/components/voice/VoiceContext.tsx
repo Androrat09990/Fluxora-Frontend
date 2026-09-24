@@ -17,7 +17,12 @@ import {
   VoiceConfirmationIntent,
 } from "./voiceTypes";
 
-const DEFAULT_COMMANDS: VoiceCommandDef[] = [
+/**
+ * Single source of truth for both recognition and the command reference UI.
+ * Keeping this exported makes it possible to verify that every accepted
+ * phrase is documented without maintaining a second test-only dictionary.
+ */
+export const DEFAULT_COMMANDS: VoiceCommandDef[] = [
   {
     id: "nav-dashboard",
     phrase: "Go to dashboard",
