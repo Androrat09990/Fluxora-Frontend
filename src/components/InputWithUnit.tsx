@@ -52,10 +52,18 @@ export const InputWithUnit: React.FC<InputWithUnitProps> = ({
   hasError,
   keyboardHint,
   className,
+  'aria-describedby': callerDescribedBy,
   ...inputProps
 }) => {
   const unitId = `${id}-unit`;
   const hintId = keyboardHint ? `${id}-keyboard-hint` : undefined;
+
+  // Callers (e.g. the create-stream rate/duration fields) point aria-describedby
+  // at the active hint or error message. Keep those references — dropping them
+  // would disconnect the field from the text that describes its state — and
+  // append the unit badge and keyboard hint so they are announced too.
+  const describedBy =
+    [callerDescribedBy, unitId, hintId].filter(Boolean).join(' ') || undefined;
 
   return (
     <div className={`input-with-unit ${hasError ? 'input-with-unit--error' : ''}`}>
@@ -63,7 +71,7 @@ export const InputWithUnit: React.FC<InputWithUnitProps> = ({
         {...inputProps}
         id={id}
         className={`input-with-unit__field ${className || ''}`.trim()}
-        aria-describedby={keyboardHint ? `${unitId} ${hintId}` : unitId}
+        aria-describedby={describedBy}
         aria-invalid={hasError || undefined}
       />
       <span id={unitId} className="input-with-unit__badge" aria-label={`Unit: ${unit}`}>

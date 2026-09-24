@@ -48,6 +48,49 @@ describe("InputWithUnit", () => {
     });
   });
 
+  describe("description association", () => {
+    it("preserves a caller-supplied aria-describedby alongside the unit id", () => {
+      render(
+        <InputWithUnit
+          id="create-stream-accrual-rate"
+          unit="USDC / day"
+          aria-describedby="create-stream-accrual-rate-error"
+        />,
+      );
+      const input = screen.getByRole("textbox");
+      const describedBy = input.getAttribute("aria-describedby") ?? "";
+      expect(describedBy.split(" ")).toContain(
+        "create-stream-accrual-rate-error",
+      );
+      expect(describedBy.split(" ")).toContain("create-stream-accrual-rate-unit");
+    });
+
+    it("preserves a caller-supplied aria-describedby together with the keyboard hint", () => {
+      render(
+        <InputWithUnit
+          id="create-stream-duration"
+          unit="days"
+          keyboardHint="Enter ↵"
+          aria-describedby="create-stream-duration-hint"
+        />,
+      );
+      const describedBy =
+        screen.getByRole("textbox").getAttribute("aria-describedby") ?? "";
+      expect(describedBy.split(" ")).toContain("create-stream-duration-hint");
+      expect(describedBy.split(" ")).toContain("create-stream-duration-unit");
+      expect(describedBy.split(" ")).toContain(
+        "create-stream-duration-keyboard-hint",
+      );
+      // The component-owned references must resolve to real elements.
+      expect(
+        document.getElementById("create-stream-duration-unit"),
+      ).not.toBeNull();
+      expect(
+        document.getElementById("create-stream-duration-keyboard-hint"),
+      ).not.toBeNull();
+    });
+  });
+
   describe("error state", () => {
     it("applies error class when hasError is true", () => {
       const { container } = render(<InputWithUnit id="rate" unit="USDC" hasError />);
