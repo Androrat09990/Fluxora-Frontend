@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
-import { lazy, Suspense, useState, type ReactElement } from "react";
+import { lazy, Suspense, useState, useEffect, type ReactElement } from "react";
 import Layout from "./components/Layout";
 import AppNavbar from "./components/navigation/AppNavbar";
 import { Skeleton, SkeletonCard } from "./components/Skeleton";
@@ -89,6 +89,24 @@ export default function App() {
   const handleSidebarToggle = () => {
     setIsSidebarOpen((prev) => !prev);
   };
+
+  useEffect(() => {
+    const handlePreloadError = (e: Event) => {
+      e.preventDefault();
+      if (
+        window.confirm(
+          "A new version of the application is available. Reload to update?"
+        )
+      ) {
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener("vite:preloadError", handlePreloadError);
+    return () => {
+      window.removeEventListener("vite:preloadError", handlePreloadError);
+    };
+  }, []);
 
   return (
     <ThemeProvider>

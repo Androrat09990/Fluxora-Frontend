@@ -142,6 +142,28 @@ describe("App route code splitting", () => {
 
     expect(await screen.findByText("Streams lazy route")).toBeInTheDocument();
   });
+
+  it("prompts for reload on vite:preloadError and reloads when accepted", () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const reloadSpy = vi.fn();
+    
+    const originalLocation = window.location;
+    // @ts-ignore
+    delete window.location;
+    window.location = { ...originalLocation, reload: reloadSpy };
+
+    render(<App />);
+
+    const event = new Event("vite:preloadError");
+    window.dispatchEvent(event);
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/reload/i)
+    );
+    expect(reloadSpy).toHaveBeenCalled();
+    
+    window.location = originalLocation;
+  });
 });
 
 describe("App landing routes", () => {
