@@ -45,17 +45,15 @@ export default function StreamDetail() {
   const { streamId } = useParams<{ streamId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { address: accountId } = useWallet();
-  const { viewers, isPresenceEnabled, updateCursor, isLoading } = usePresenceViewers(
-    streamId,
-    undefined,
-    accountId ?? undefined,
-  );
+  const { viewers, isPresenceEnabled, updateCursor, isLoading } =
+    usePresenceViewers(streamId, undefined, accountId ?? undefined);
 
   // Compare mode: ?compare=<otherStreamId>
   const compareWithId = searchParams.get("compare");
   const isCompareMode = Boolean(compareWithId && streamId);
 
   const [isOgModalOpen, setIsOgModalOpen] = useState(false);
+  const shareTriggerRef = useRef<HTMLButtonElement>(null);
   const [stream, setStream] = useState<StreamRecord | null | undefined>(
     undefined,
   );
@@ -203,7 +201,7 @@ export default function StreamDetail() {
   if (error) {
     const handleRetry = () => {
       if (!streamId) return;
-      
+
       // Same guard as the effect above: cancel any still-pending fetch
       // before starting a new one, so a slow earlier retry (or a route
       // change that happens before this retry resolves) can never
@@ -372,13 +370,16 @@ export default function StreamDetail() {
           >
             {stream.name}
           </h1>
-          <p style={{ color: "var(--color-text-secondary, #6b7280)", margin: 0 }}>
+          <p
+            style={{ color: "var(--color-text-secondary, #6b7280)", margin: 0 }}
+          >
             {stream.summary}
           </p>
         </div>
 
         {/* Share & Social Preview Card Trigger */}
         <button
+          ref={shareTriggerRef}
           onClick={() => setIsOgModalOpen(true)}
           data-testid="share-og-preview-btn"
           aria-label={`Share ${stream.name} and preview social card`}
@@ -551,10 +552,7 @@ export default function StreamDetail() {
           totalAmount={stream.depositAmount}
           status={
             stream.status.toLowerCase() as
-              | "active"
-              | "paused"
-              | "completed"
-              | "upcoming"
+              "active" | "paused" | "completed" | "upcoming"
           }
           isLoading={false}
         />
@@ -588,15 +586,14 @@ export default function StreamDetail() {
       )}
 
       {/* Cursor indicator overlays */}
-      {isPresenceEnabled && (
-        <PresenceCursorOverlay viewers={viewers} />
-      )}
+      {isPresenceEnabled && <PresenceCursorOverlay viewers={viewers} />}
 
       {/* Open Graph Social Preview Modal */}
       <StreamOGPreviewModal
         stream={stream}
         isOpen={isOgModalOpen}
         onClose={() => setIsOgModalOpen(false)}
+        triggerRef={shareTriggerRef}
       />
     </div>
   );
