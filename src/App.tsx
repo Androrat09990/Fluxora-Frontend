@@ -1,5 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { lazy, useState, useEffect, type ComponentType, type ReactElement } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useParams,
+} from "react-router-dom";
+import { lazy, useState, type ComponentType, type ReactElement } from "react";
 import Layout from "./components/Layout";
 import AppNavbar from "./components/navigation/AppNavbar";
 import RouteErrorBoundary from "./components/RouteErrorBoundary";
@@ -37,7 +46,6 @@ const ComponentGallery = IS_DEV
   ? lazy(() => import("./pages/dev/ComponentGallery"))
   : () => null;
 
-
 function LegacyStreamRedirect() {
   const { streamId } = useParams();
   return (
@@ -50,7 +58,9 @@ function LegacyStreamRedirect() {
 
 function RecipientRoute() {
   const location = useLocation();
-  return <Recipient key={getRecipientRouteKey(location.pathname, location.search)} />;
+  return (
+    <Recipient key={getRecipientRouteKey(location.pathname, location.search)} />
+  );
 }
 
 function lazyAppRoute(
@@ -115,10 +125,22 @@ export default function App() {
                 <ErrorBoundary>
                   <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="/dashboard" element={<Navigate to="/app" replace />} />
-                    <Route path="/streams" element={<Navigate to="/app/streams" replace />} />
-                    <Route path="/streams/:streamId" element={<LegacyStreamRedirect />} />
-                    <Route path="/landing" element={<Navigate to="/" replace />} />
+                    <Route
+                      path="/dashboard"
+                      element={<Navigate to="/app" replace />}
+                    />
+                    <Route
+                      path="/streams"
+                      element={<Navigate to="/app/streams" replace />}
+                    />
+                    <Route
+                      path="/streams/:streamId"
+                      element={<LegacyStreamRedirect />}
+                    />
+                    <Route
+                      path="/landing"
+                      element={<Navigate to="/" replace />}
+                    />
                     <Route
                       path="/app"
                       element={
@@ -132,17 +154,67 @@ export default function App() {
                       <Route path="streams/:streamId" element={<RequireWalletAction>{lazyAppRoute(<StreamDetail />, () => import("./pages/StreamDetail"))}</RequireWalletAction>} />
                       <Route path="recipient" element={<RequireWalletAction>{lazyAppRoute(<RecipientRoute />, () => import("./pages/Recipient"))}</RequireWalletAction>} />
                       <Route path="treasurypage" element={lazyAppRoute(<TreasuryPage />, () => import("./pages/TreasuryPage"))} />
+                      <Route
+                        index
+                        element={lazyAppRoute(
+                          <Dashboard />,
+                          () => import("./pages/Dashboard"),
+                        )}
+                      />
+                      <Route
+                        path="streams"
+                        element={
+                          <RequireWalletAction>
+                            {lazyAppRoute(
+                              <Streams />,
+                              () => import("./pages/Streams"),
+                            )}
+                          </RequireWalletAction>
+                        }
+                      />
+                      <Route
+                        path="streams/:streamId"
+                        element={
+                          <RequireWalletAction>
+                            {lazyAppRoute(
+                              <StreamDetail />,
+                              () => import("./pages/StreamDetail"),
+                            )}
+                          </RequireWalletAction>
+                        }
+                      />
+                      <Route
+                        path="recipient"
+                        element={
+                          <RequireWalletAction>
+                            {lazyAppRoute(<RecipientRoute />)}
+                          </RequireWalletAction>
+                        }
+                      />
+                      <Route
+                        path="treasurypage"
+                        element={lazyAppRoute(
+                          <TreasuryPage />,
+                          () => import("./pages/TreasuryPage"),
+                        )}
+                      />
                       <Route path="error" element={<ErrorPage />} />
                       {IS_DEV && (
                         <Route
                           path="empty-state-demo"
-                          element={lazyAppRoute(<EmptyStateDemo />, () => import("./pages/EmptyStateDemo"))}
+                          element={lazyAppRoute(
+                            <EmptyStateDemo />,
+                            () => import("./pages/EmptyStateDemo"),
+                          )}
                         />
                       )}
                       {IS_DEV && (
                         <Route
                           path="component-gallery"
-                          element={lazyAppRoute(<ComponentGallery />, () => import("./pages/dev/ComponentGallery"))}
+                          element={lazyAppRoute(
+                            <ComponentGallery />,
+                            () => import("./pages/dev/ComponentGallery"),
+                          )}
                         />
                       )}
                       {/* Nested catch-all: unmatched /app/* must render NotFound
@@ -150,7 +222,10 @@ export default function App() {
                       <Route path="*" element={<NotFound />} />
                     </Route>
                     <Route path="/connect-wallet" element={<ConnectWallet />} />
-                    <Route path="/embed/streams/:streamId" element={<EmbedStreamWidget />} />
+                    <Route
+                      path="/embed/streams/:streamId"
+                      element={<EmbedStreamWidget />}
+                    />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </ErrorBoundary>
