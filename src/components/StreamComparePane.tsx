@@ -383,7 +383,7 @@ function CompareStreamPane({
 
 export default function StreamComparePane({ leftId, rightId, onExit }: Props) {
   const [ids, setIds] = useState<[string, string]>([leftId, rightId]);
-  const currentDate = useTickingNow();
+  const currentDate = useTickingNow({ precision: "minute" });
 
   // Re-sync during render when the parent selection changes (e.g. rapid
   // deep-link / table selection updates). Avoids one frame where labels

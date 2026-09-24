@@ -61,7 +61,7 @@ export default function StreamDetail() {
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const currentDate = useTickingNow();
+  const currentDate = useTickingNow({ precision: "minute" });
 
   const [topUpAmount, setTopUpAmount] = useState("");
   const [topUpStatus, setTopUpStatus] = useState<TransactionStatus>("idle");
