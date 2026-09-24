@@ -57,7 +57,9 @@ describe('ErrorBoundary', () => {
     expect(
       screen.getByText(/a page error interrupted this view/i),
     ).toBeInTheDocument();
-    expect(consoleErrorSpy).toHaveBeenCalled();
+    // Try Again and Back to Dashboard recovery actions are available
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /back to dashboard/i })).toBeInTheDocument();
   });
 
   it('resets the boundary when Try Again is clicked', async () => {
