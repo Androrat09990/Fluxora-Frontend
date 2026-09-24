@@ -13,13 +13,26 @@ const MAX_SANITIZED_INTEGER_DIGITS = 15;
 const MAX_FINITE_AMOUNT = 999_999_999_999_999;
 
 /**
+ * Scale factor between a display amount (e.g. `12.34`) and its integer minor
+ * units (`1234n`). All amounts in this module are stored as multiples of this
+ * value so they stay exact.
+ */
+const MINOR_UNITS_SCALE = 10n ** BigInt(AMOUNT_DECIMAL_PLACES);
+
+/** Upper bound, expressed in minor units, that every amount is clamped to. */
+const MAX_MINOR_UNITS = BigInt(MAX_FINITE_AMOUNT) * MINOR_UNITS_SCALE;
+
+/**
  * Keeps user-entered treasury amounts decimal-safe for UI state.
  *
- * The function now validates the input more strictly:
+ * The function validates the input strictly:
  *   • Allows only digits, a single decimal point, and **properly grouped** thousands‑separator commas.
  *   • Rejects scientific‑notation, extra decimal points, minus signs, letters, and malformed commas.
  *   • If any invalid pattern is detected the function returns an empty string, signalling the caller
  *     that the value should be rejected (the UI can surface a validation error).
+ *
+ * This is a pure string transformation — no numeric conversion takes place, so
+ * no precision can be lost here.
  */
 export function sanitizeAmount(value: string): string {
   // Quick reject dangerous characters (e/E, minus or plus signs). Whitespace and other symbols are ignored later.
@@ -66,7 +79,7 @@ export function sanitizeAmount(value: string): string {
   }
 
   // Ensure we didn't end up with just a trailing '.' – that is not a valid number.
-  if (sanitized.endsWith('.')) {
+  if (sanitized.endsWith(".")) {
     return "";
   }
 

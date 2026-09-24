@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
+import amountRules from "./eslint-rules/no-float-amount-arithmetic.js";
 
 export default tseslint.config(
   {
@@ -15,6 +16,7 @@ export default tseslint.config(
       "src/**/*.test.ts",
       "src/**/*.test.tsx",
       "scripts/**/*.test.mjs",
+      "eslint-rules/**",
     ],
   },
   js.configs.recommended,
