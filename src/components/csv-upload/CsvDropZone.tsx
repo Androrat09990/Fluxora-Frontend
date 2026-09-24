@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './CsvDropZone.css';
 import type { UploadZoneState } from './types';
-import { buildTemplateCsv, MAX_CSV_FILE_SIZE_BYTES } from './csvParser';
+import { buildTemplateCsv } from './csvParser';
+import { validateCsvFile } from './csvFileValidation';
 import { CsvParseCancelledError, parseCsvAsync } from './csvParseClient';
 import type { CsvParseTask } from './csvParseClient';
 import type { ParseResult } from './types';
@@ -11,11 +12,6 @@ export interface CsvDropZoneProps {
   /** Called when a file has been successfully read. */
   onParsed: (result: ParseResult, fileName: string, rawText: string) => void;
 }
-
-const ACCEPTED_MIME = new Set(['text/csv', 'application/csv', 'application/vnd.ms-excel', 'text/plain']);
-
-/** Human-readable ceiling for size-reject copy (matches MAX_CSV_FILE_SIZE_BYTES). */
-const MAX_CSV_FILE_SIZE_LABEL = '1 MB';
 
 /**
  * CsvDropZone — drag-and-drop / click-to-browse CSV upload zone.
@@ -67,21 +63,11 @@ export const CsvDropZone: React.FC<CsvDropZoneProps> = ({ onParsed }) => {
 
   const processFile = useCallback(
     async (file: File) => {
-      // Validate extension / mime
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      const isCsv =
-        ext === 'csv' ||
-        ACCEPTED_MIME.has(file.type);
-      if (!isCsv) {
-        reject('Only .csv files are accepted.');
-        return;
-      }
-
-      // Reject oversized files before buffering the entire contents into memory.
-      if (file.size > MAX_CSV_FILE_SIZE_BYTES) {
-        reject(
-          `File is too large. Maximum size is ${MAX_CSV_FILE_SIZE_LABEL}.`,
-        );
+      // Validate type and size from cheap metadata BEFORE reading contents, so
+      // an arbitrary large or wrong-type file never gets buffered into memory.
+      const validation = validateCsvFile(file);
+      if (!validation.ok) {
+        reject(validation.message);
         return;
       }
 
