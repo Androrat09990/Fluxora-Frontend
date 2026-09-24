@@ -68,6 +68,7 @@ export const en = {
   "createStream.step2.customStartDateHelper": "When the stream begins accruing USDC",
   "createStream.step2.cliffPeriodLabel": "Cliff period",
   "createStream.step2.optionalLabel": "(optional)",
+  "createStream.step2.cliffHint": "Funds accrue during the cliff and become withdrawable after the cliff date",
   "createStream.step2.cliffTooltipTitle": "What is a cliff?",
   "createStream.step2.cliffTooltipAria": "Learn more about cliff periods",
   "createStream.step2.cliffTooltipBody1": "A cliff is a vesting lockup period. During the cliff:",

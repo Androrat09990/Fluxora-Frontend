@@ -2343,6 +2343,9 @@ export default function CreateStreamModal({
                 </div>
                 <span>{t("createStream.step2.enableCliffLabel")}</span>
               </div>
+              <span className="validation-message validation-message--hint">
+                {t("createStream.step2.cliffHint")}
+              </span>
               {cliffEnabled && (
                 <div style={{ marginTop: '0.75rem' }}>
                   <InputField
@@ -3321,6 +3324,9 @@ export default function CreateStreamModal({
                             </div>
                             <span>{t("createStream.step2.enableCliffLabel")}</span>
                           </div>
+                          <span className="validation-message validation-message--hint">
+                            {t("createStream.step2.cliffHint")}
+                          </span>
                           {cliffEnabled && (
                             <div style={{ marginTop: '0.75rem' }}>
                               <InputField
