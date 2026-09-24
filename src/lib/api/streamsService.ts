@@ -12,6 +12,7 @@ import {
   type StreamStatus,
 } from "../../data/streamRecords";
 import { formatAssetAmount } from "../formatters";
+import { logger } from "../logger";
 
 const DEFAULT_BASE_URL = "http://localhost:8787";
 
@@ -373,7 +374,7 @@ async function fetchJson<T>(
         attempt++;
 
         if (import.meta.env.DEV) {
-          console.warn(
+          logger.warn(
             `[streamsService] Network error on attempt ${attempt}/${maxRetries + 1}. Retrying in ${delayMs}ms…`,
             error,
           );
